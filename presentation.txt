@@ -1,0 +1,54 @@
+Forwardable
+
+--
+
+open
+
+A file
+
+open("somefile.txt", "w") do |f|
+  f.puts "Hello"
+end
+
+A URI
+
+require "open-uri"
+sample = open("http://google.co.uk"){ |f| f.read(1024) }
+
+A program!
+
+open("|less", "w") do |f|
+  80.times do
+    f.puts "some output"
+  end
+end
+
+--
+
+open3
+
+--
+
+Array#assoc
+
+--
+
+pack/unpack
+
+--
+
+Set
+
+--
+
+Soap
+
+--
+
+Tempfile
+
+--
+
+pp
+
+--
