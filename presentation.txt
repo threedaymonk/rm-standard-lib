@@ -1,7 +1,6 @@
 # vim: syntax=ruby
 
 # Secrets of the standard library
-# (and core Ruby)
 
 ###
 
@@ -116,19 +115,40 @@ stdout.read
 
 ###
 
-# Array#assoc
+# Array#assoc and rassoc
 
 ###
 
-data = [["cat",  "kitten", "feline" ],
-        ["dog",  "puppy",  "canine" ],
-        ["bear", "cub",    "ursine" ]]
+data = [["cat",  "kitten", "feline"],
+        ["dog",  "puppy",  "canine"],
+        ["bear", "cub",    "ursine"]]
 data.assoc("dog")
 # => ["dog", "puppy", "canine"]
+data.rassoc("kitten")
+# => ["cat",  "kitten", "feline"]
 
 ###
 
 # pack/unpack
+
+###
+
+# QT/MPEG4 atom header
+
+length, name = @io.read(8).unpack("Na4")
+
+header = [1234, "moov"].pack("Na4")
+## => "\000\000\004\322moov"
+
+###
+
+# UTF-8
+
+codepoints = "string".unpack("U*")
+# => [115, 116, 114, 105, 110, 103]
+
+em_dash = [0x2014].pack("U")
+# => "—"
 
 ###
 
@@ -139,6 +159,12 @@ data.assoc("dog")
 # Soap
 
 ###
+
+require "soap/wsdlDriver"
+soap = SOAP::WSDLDriverFactory.new(wsdl_url).create_rpc_driver
+result = soap.someRemoteMethod("paramName" => 99)
+
+####
 
 # Tempfile
 
