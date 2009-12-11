@@ -1,0 +1,104 @@
+#!/usr/bin/env ruby
+
+require 'time'
+require 'redcloth'
+require 'syntax/convertors/html'
+require 'erb'
+require 'ostruct'
+require 'cgi'
+
+class Fixnum
+  def ordinal
+    # teens
+    return 'th' if (10..19).include?(self % 100)
+    # others
+    case self % 10
+    when 1: return 'st'
+    when 2: return 'nd'
+    when 3: return 'rd'
+    else    return 'th'
+    end
+  end
+end
+
+class Time
+  def pretty
+    return "#{mday}#{mday.ordinal} #{strftime('%B')} #{year}"
+  end
+end
+
+class Object
+  def h
+    CGI.escapeHTML(to_s)
+  end
+end
+
+def convert_syntax(syntax, source)
+  return Syntax::Convertors::HTML.for_syntax(syntax).convert(source).gsub(%r!^<pre>|</pre>$!,'')
+end
+
+def expand(text)
+  stages = text.split(/^>/)
+  return (1..(stages.length)).inject([]){ |pages, length|
+    pages << stages[0, length].join
+  }
+end
+
+def render(text)
+  return nil unless text
+  syntax_items = []
+  text.gsub!(%r!\(--\n(.*?)\n--\)!m){
+    %{<pre syntax="ruby">#{$1}</pre>}
+  }
+  text.gsub!(%r!\(--(.*?)--\)!m){
+    %{<code syntax="ruby">#{$1.strip}</code>}
+  }
+  text.gsub!(%r!<(pre|code)[^>]*?syntax=['"]([^'"]+)[^>]*>(.*?)</\1>!m){
+    ident = syntax_items.length
+    element, syntax, source = $1, $2, $3
+    syntax_items << "<#{element} class=\"syntax\">#{convert_syntax(syntax, source)}</#{element}>"
+    "syntax-temp-#{ident}"
+  }
+  body = RedCloth.new(text).to_html
+  body.gsub!(%r!(?:<pre><code>)?syntax-temp-(\d+)(?:</code></pre>)?!){ syntax_items[$1.to_i] }
+  body.gsub!(%r!<p>(<(pre)\b.*?</\2>)</p>!m){ $1 }
+  return body
+end
+
+if ARGV.length == 2
+  src, template = ARGV
+else
+  puts("Usage: #{File.split($0).last} source.txt template.rhtml > output.html")
+  exit!
+end
+
+template = ERB.new(File.open(template).read)
+
+metadata = OpenStruct.new
+slides = []
+File.open(src) do |io|
+  io.each_line do |line|
+    line.strip!
+    if line.empty?
+      io.read.split(/\n-{3,}\n/m).each do |page_text|
+        page_text.strip!
+        expand(page_text).each do |body_text|
+          content, handout = body_text.split(/\n#\n/m, 2)
+          slide = OpenStruct.new
+          slide.content = render(content)
+          slide.handout = render(handout)
+          slides << slide
+        end
+      end
+    else
+      key, value = line.split(/:\s*/, 2)
+      metadata.send("#{key.downcase.to_sym}=".to_sym, value)
+    end
+  end
+end
+
+stat = File.stat(src)
+metadata.created = stat.ctime
+metadata.modified = stat.mtime
+
+$stdout << template.result(binding)
