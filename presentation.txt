@@ -1,27 +1,100 @@
-Forwardable
+# vim: syntax=ruby
 
----
+# Secrets of the standard library
+# (and core Ruby)
 
-open
+###
 
----
+# Forwardable
 
-A file
+###
+
+class Event < ActiveRecord::Base
+  belongs_to :opportunity
+end
+
+opportunity.organization  #  :-)
+event.opportunity  #  :-)
+event.opportunity.organization  #  :-(
+
+###
+
+class Event < ActiveRecord::Base
+  belongs_to :opportunity
+
+  def organization
+    opportunity.organization
+  end
+end
+
+event.organization
+
+###
+
+require "forwardable"
+class Event < ActiveRecord::Base
+  extend Forwardable
+  belongs_to :opportunity
+  def_delegators :opportunity, :organization # , ... more methods ...
+  #                  \__ object     \__ method name
+  def_delegator :opportunity, :organization, :opportunity_organization
+  #                  \__ object    \__ method to call      \__ local method name
+end
+
+event.organization
+event.opportunity_organization
+
+###
+
+class Opportunity < ActiveRecord::Base
+  validates_presence_of :name
+  alias title name
+end
+
+# => NameError: undefined method `name' for class `Opportunity'
+
+###
+
+class Opportunity < ActiveRecord::Base
+  validates_presence_of :name
+  alias_method :title, :name
+end
+
+# => in `alias_method':NameError: undefined method `name' for class `Opportunity'
+
+###
+
+require "forwardable"
+class Opportunity < ActiveRecord::Base
+  extend Forwardable
+  validates_presence_of :name
+  def_delegator :self, :name, :title
+end
+
+opportunity.title
+
+###
+
+# open
+
+###
+
+# A file
 
 open("somefile.txt", "w") do |f|
   f.puts "Hello"
 end
 
----
+###
 
-A URI
+# A URI
 
 require "open-uri"
 sample = open("http://google.co.uk"){ |f| f.read(1024) }
 
----
+###
 
-A program!
+# A program!
 
 open("|less", "w") do |f|
   80.times do
@@ -29,11 +102,11 @@ open("|less", "w") do |f|
   end
 end
 
----
+###
 
-open3
+# open3
 
----
+###
 
 require "open3"
 stdin, stdout, stderr = Open3.popen3("php")
@@ -42,11 +115,11 @@ stdin.close
 stdout.read
 # => "hello cruel world"
 
----
+###
 
-Array#assoc
+# Array#assoc
 
----
+###
 
 data = [["cat",  "kitten", "feline" ],
         ["dog",  "puppy",  "canine" ],
@@ -54,24 +127,24 @@ data = [["cat",  "kitten", "feline" ],
 data.assoc("dog")
 # => ["dog", "puppy", "canine"]
 
----
+###
 
 pack/unpack
 
----
+###
 
 Set
 
----
+###
 
 Soap
 
----
+###
 
 Tempfile
 
----
+###
 
 pp
 
----
+###
