@@ -35,10 +35,9 @@ require "forwardable"
 class Event < ActiveRecord::Base
   extend Forwardable
   belongs_to :opportunity
+
   def_delegators :opportunity, :organization # , ... more methods ...
-  #                  \__ object     \__ method name
   def_delegator :opportunity, :organization, :opportunity_organization
-  #                  \__ object    \__ method to call      \__ local method name
 end
 
 event.organization
@@ -129,22 +128,22 @@ data.assoc("dog")
 
 ###
 
-pack/unpack
+# pack/unpack
 
 ###
 
-Set
+# Set
 
 ###
 
-Soap
+# Soap
 
 ###
 
-Tempfile
+# Tempfile
 
 ###
 
-pp
+# pp
 
 ###
