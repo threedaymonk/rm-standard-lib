@@ -1,8 +1,10 @@
 Forwardable
 
---
+---
 
 open
+
+---
 
 A file
 
@@ -10,10 +12,14 @@ open("somefile.txt", "w") do |f|
   f.puts "Hello"
 end
 
+---
+
 A URI
 
 require "open-uri"
 sample = open("http://google.co.uk"){ |f| f.read(1024) }
+
+---
 
 A program!
 
@@ -23,32 +29,49 @@ open("|less", "w") do |f|
   end
 end
 
---
+---
 
 open3
 
---
+---
+
+require "open3"
+stdin, stdout, stderr = Open3.popen3("php")
+stdin.puts "<? echo 'hello cruel world'; ?>"
+stdin.close
+stdout.read
+# => "hello cruel world"
+
+---
 
 Array#assoc
 
---
+---
+
+data = [["cat",  "kitten", "feline" ],
+        ["dog",  "puppy",  "canine" ],
+        ["bear", "cub",    "ursine" ]]
+data.assoc("dog")
+# => ["dog", "puppy", "canine"]
+
+---
 
 pack/unpack
 
---
+---
 
 Set
 
---
+---
 
 Soap
 
---
+---
 
 Tempfile
 
---
+---
 
 pp
 
---
+---
