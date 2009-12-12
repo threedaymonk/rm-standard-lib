@@ -1,23 +1,36 @@
-# vim: syntax=ruby
+Title: Secrets of the standard library
+Author: Paul Battley
+Presented: 2009-12-12
+Event: Ruby Manor: Harder
 
-# Secrets of the standard library
+h1. Secrets of the standard library
 
-###
+Paul Battley
 
-# Forwardable
+http://po-ru.com/
 
-###
+----
 
+h1. Forwardable
+
+>(expose another object's methods)
+
+----
+
+(--
 class Event < ActiveRecord::Base
   belongs_to :opportunity
 end
-
+--)
+>(--
 opportunity.organization  #  :-)
 event.opportunity  #  :-)
 event.opportunity.organization  #  :-(
+--)
 
-###
+----
 
+(--
 class Event < ActiveRecord::Base
   belongs_to :opportunity
 
@@ -27,149 +40,302 @@ class Event < ActiveRecord::Base
 end
 
 event.organization
+--)
 
-###
+----
 
+(--
 require "forwardable"
+
 class Event < ActiveRecord::Base
   extend Forwardable
   belongs_to :opportunity
 
   def_delegators :opportunity, :organization # , ... more methods ...
-  def_delegator :opportunity, :organization, :opportunity_organization
 end
 
 event.organization
+--)
+
+----
+
+(--
+require "forwardable"
+
+class Event < ActiveRecord::Base
+  extend Forwardable
+  belongs_to :opportunity
+
+  def_delegator :opportunity, :organization, :opportunity_organization
+end
+
 event.opportunity_organization
+--)
 
-###
+----
 
+(--
 class Opportunity < ActiveRecord::Base
   validates_presence_of :name
   alias title name
 end
-
+--)
+>(--
 # => NameError: undefined method `name' for class `Opportunity'
+--)
 
-###
+----
 
+(--
 class Opportunity < ActiveRecord::Base
   validates_presence_of :name
   alias_method :title, :name
 end
-
+--)
+>(--
 # => in `alias_method':NameError: undefined method `name' for class `Opportunity'
+--)
 
-###
+----
 
+(--
 require "forwardable"
+
 class Opportunity < ActiveRecord::Base
   extend Forwardable
   validates_presence_of :name
   def_delegator :self, :name, :title
 end
-
+--)
+>(--
 opportunity.title
+--)
 
-###
+----
 
-# open
+h1. open
 
-###
+>(handle input and output)
 
-# A file
+----
 
+A file
+
+(--
 open("somefile.txt", "w") do |f|
   f.puts "Hello"
 end
+--)
 
-###
+----
 
-# A URI
+A URI
 
+(--
 require "open-uri"
 sample = open("http://google.co.uk"){ |f| f.read(1024) }
+--)
 
-###
+----
 
-# A program!
+A program!
 
+(--
 open("|less", "w") do |f|
-  80.times do
-    f.puts "some output"
+  80.times do |i|
+    f.puts "Line #{i}"
   end
 end
+--)
 
-###
+----
 
-# open3
+A bit more clever
 
-###
+(--
+if STDOUT.tty?
+  $stdout = open("|less", "w")
+end
 
+# output stuff
+
+$stdout.close # <-- don't forget!
+--)
+
+----
+
+h1. open3
+
+>(interact with other processes)
+
+----
+
+(--
 require "open3"
-stdin, stdout, stderr = Open3.popen3("php")
-stdin.puts "<? echo 'hello cruel world'; ?>"
-stdin.close
-stdout.read
+
+output = Open3.popen3("php"){ |stdin, stdout, stderr|
+  stdin.puts "<? echo 'hello cruel world'; ?>"
+  stdin.close
+  stdout.read
+}
+
 # => "hello cruel world"
+--)
 
-###
+----
 
-# Array#assoc and rassoc
+h1. Array#assoc and rassoc
 
-###
+>(look up arrays of arrays)
 
+----
+
+(--
 data = [["cat",  "kitten", "feline"],
         ["dog",  "puppy",  "canine"],
         ["bear", "cub",    "ursine"]]
+--)
+>(--
 data.assoc("dog")
 # => ["dog", "puppy", "canine"]
+--)
+>(--
 data.rassoc("kitten")
 # => ["cat",  "kitten", "feline"]
+--)
 
-###
+----
 
-# pack/unpack
+h1. Array#pack and String#unpack
 
-###
+>(convert data to and from binary representations)
 
-# QT/MPEG4 atom header
+----
 
+QT/MPEG4 atom header
+
+(--
 length, name = @io.read(8).unpack("Na4")
 
 header = [1234, "moov"].pack("Na4")
-## => "\000\000\004\322moov"
+# => "\000\000\004\322moov"
+--)
 
-###
+----
 
-# UTF-8
+UTF-8
 
+(--
 codepoints = "string".unpack("U*")
 # => [115, 116, 114, 105, 110, 103]
 
 em_dash = [0x2014].pack("U")
 # => "—"
+--)
 
-###
+----
 
-# Set
+h1. Set
 
-###
+>(mathematical sets)
 
-# Soap
+----
 
-###
+(--
+require "set"
 
+a = Set.new([:x, :y, :z])
+b = Set.new([:w, :x])
+
+a | b # => #<Set: {:w, :y, :z, :x}>
+
+a ^ b # => #<Set: {:w, :y, :z}>
+
+a & b # => #<Set: {:x}>
+--)
+
+----
+
+(--
+require "set"
+
+vowel_sequences = Set.new
+words = %w[ baboon sheep goat stoat weasel ]
+
+words.each do |word|
+  word.scan(/[aeiou]+/).each do |sequence|
+    vowel_sequences << sequence
+  end
+end
+
+vowel_sequences
+# => #<Set: {"ee", "oo", "a", "e", "ea", "oa"}>
+--)
+
+----
+
+(--
+require "set"
+
+words = %w[ baboon sheep goat stoat weasel ]
+
+vowel_sequences = words.inject(Set.new){ |set, word|
+  set.merge(word.scan(/[aeiou]+/))
+}
+
+vowel_sequences
+# => #<Set: {"ee", "oo", "a", "e", "ea", "oa"}>
+--)
+
+----
+
+h1. Soap
+
+>(yuk)
+
+----
+
+(--
 require "soap/wsdlDriver"
 soap = SOAP::WSDLDriverFactory.new(wsdl_url).create_rpc_driver
 result = soap.someRemoteMethod("paramName" => 99)
+--)
 
-####
+----
 
-# Tempfile
+h1. pp
 
-###
+>(pretty printing)
 
-# pp
+----
 
-###
+(--
+data = [{:name => "stoat",  :family => "Mustelidae"},
+        {:name => "weasel", :family => "Mustelidae"},
+        {:name => "skunk",  :family => "Mephitidae"}]
+--)
+
+----
+
+(--
+p data
+
+--)
+
+<pre>[{:name=>"stoat", :family=>"Mustelidae"}, {:name=>"weasel", :family=>"Mustelidae"}, {:name=>"skunk", :family=>"Mephitidae"}]</pre>
+
+----
+
+(--
+require "pp"
+pp data
+
+--)
+
+<pre>[{:name=>"stoat", :family=>"Mustelidae"},
+ {:name=>"weasel", :family=>"Mustelidae"},
+ {:name=>"skunk", :family=>"Mephitidae"}]</pre>
+
+----
+
+h1. 終
