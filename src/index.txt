@@ -9,6 +9,8 @@ Paul Battley
 
 http://po-ru.com/
 
+@threedaymonk
+
 ----
 
 h1. Forwardable
@@ -339,3 +341,6 @@ pp data
 ----
 
 h1. 終
+
+* http://ruby-doc.org/core
+* http://ruby-doc.org/stdlib
