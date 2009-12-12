@@ -100,8 +100,8 @@ pre, code {
 }
 pre {
   text-align: left;
-  font-size: 0.5em;
-  line-height: 1.1em;
+  font-size: 0.7em;
+  line-height: 1.3em;
   white-space: pre-wrap;       /* css-3 */
   white-space: -moz-pre-wrap !important;  /* Mozilla, since 1999 */
   white-space: -pre-wrap;      /* Opera 4-6 */
